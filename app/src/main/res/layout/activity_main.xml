@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+
+    <RelativeLayout
+        android:id="@+id/topViews"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="7sp"
+        android:layout_gravity="center">
+
+        <Spinner
+            android:id="@+id/faculty_spinner"
+            android:layout_width="125dp"
+            android:layout_height="38sp"
+            android:layout_marginTop="20sp"
+            android:entries="@array/facultys"/>
+
+        <EditText
+            android:id="@+id/edit_text_group"
+            android:layout_width="60sp"
+            android:layout_height="40sp"
+            android:layout_marginTop="20sp"
+            android:layout_marginLeft="10sp"
+            android:layout_toRightOf="@id/faculty_spinner"
+            android:singleLine="true">
+        </EditText>
+
+        <Button
+            android:id="@+id/button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10sp"
+            android:layout_marginTop="15sp"
+            android:layout_toRightOf="@id/edit_text_group"
+            android:text="@string/getButton"
+            app:backgroundTint="@color/black"
+            android:textColor="@color/white"/>
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/topViews"
+        android:layout_centerHorizontal="true"
+        android:layout_gravity="center">
+        <Button
+            android:id="@+id/pn"
+            android:layout_width="60sp"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/black"
+            android:text="@string/monday"
+            android:textColor="@color/white"/>
+        <Button
+            android:id="@+id/vt"
+            android:layout_width="60sp"
+            android:layout_height="wrap_content"
+            android:text="@string/tuesday"
+            android:layout_toRightOf="@id/pn"
+            android:backgroundTint="@color/black"
+            android:textColor="@color/white"/>
+        <Button
+            android:id="@+id/sr"
+            android:layout_width="60sp"
+            android:layout_height="wrap_content"
+            android:text="@string/wednesday"
+            android:layout_toRightOf="@id/vt"
+            android:backgroundTint="@color/black"
+            android:textColor="@color/white"/>
+        <Button
+            android:id="@+id/cht"
+            android:layout_width="60sp"
+            android:layout_height="wrap_content"
+            android:text="@string/thursday"
+            android:layout_toRightOf="@id/sr"
+            android:backgroundTint="@color/black"
+            android:textColor="@color/white"/>
+        <Button
+            android:id="@+id/pt"
+            android:layout_width="60sp"
+            android:layout_height="wrap_content"
+            android:text="@string/friday"
+            android:layout_toRightOf="@id/cht"
+            android:backgroundTint="@color/black"
+            android:textColor="@color/white"/>
+
+        <Button
+            android:id="@+id/sb"
+            android:layout_width="60sp"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@id/pt"
+            android:text="@string/saturday"
+            android:backgroundTint="@color/black"
+            android:textColor="@color/white"
+            />
+    </RelativeLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerview_users"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+
+
+</LinearLayout>

@@ -1,0 +1,27 @@
+<resources>
+    <string name="app_name">Расписание СГУ</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <!--> "МехМат", "Геофак", "Биофак", "Геол.", "ИИ", "ИиМО", "ИФ", "Социо" <-->
+    <string-array name="facultys">
+        <item>МехМат</item>
+        <item>Геофак</item>
+        <item>Биофак</item>
+        <item>Геол</item>
+        <item>ИИ</item>
+        <item>ИиМО</item>
+        <item>ИФ</item>
+        <item>Социо</item>
+    </string-array>
+
+    <string name="monday">ПН</string>
+    <string name="tuesday">ВТ</string>
+    <string name="wednesday">СР</string>
+    <string name="thursday">ЧТ</string>
+    <string name="friday">ПТ</string>
+    <string name="saturday">СБ</string>
+
+    <string name="stub">STUBSTUBSTUBSTUBSTUB</string>
+
+    <string name="getButton">Получить</string>
+</resources>
