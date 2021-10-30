@@ -1,14 +1,16 @@
 package com.hfad.retro
 
-import android.app.Activity
+import android.content.SharedPreferences
 import android.graphics.Color
 import android.icu.util.Calendar
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log.d
-import android.view.View
+import android.view.Gravity
 import android.widget.Button
+import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
@@ -21,14 +23,18 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 
-const val BASE_URL = "https://schedule-to-ssu.herokuapp.com"
+const val BASE_URL = "https://schedule-to-ssu.herokuapp.com/"
+
+const val GROUP = "groupNumber"
+const val FACULTY = "faculty"
+
 class MainActivity : AppCompatActivity() {
 
     private lateinit var myAdapter: MyAdapter
     private lateinit var linearLayoutManager: LinearLayoutManager
 
     @RequiresApi(Build.VERSION_CODES.N)
-    var currentDay: Int = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)-1;
+    var currentDay: Int = Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,6 +46,8 @@ class MainActivity : AppCompatActivity() {
         recyclerview_users.layoutManager = linearLayoutManager
         toggleButtons(false)
 
+        loadGroup()
+
         button.setOnClickListener {
             toggleButtons(false)
             recyclerview_users.removeAllViews()
@@ -47,7 +55,7 @@ class MainActivity : AppCompatActivity() {
 
             hideKeyboard()
 
-            for(i in 1..7) setColorToUnselectedButton(i)
+            for (i in 1..7) setColorToUnselectedButton(i)
 
             getData()
         }
@@ -55,21 +63,79 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    fun saveGroup() {
+        val sPref = getPreferences(MODE_PRIVATE)
+        val ed: SharedPreferences.Editor = sPref.edit()
+        ed.putString(GROUP, edit_text_group.text.toString())
+        ed.putString(FACULTY, spinnerItemToFaculty(faculty_spinner.selectedItem.toString()))
+        ed.apply()
+    }
 
+    private fun loadGroup() {
+        val sPref = getPreferences(MODE_PRIVATE)
+        val faculty = sPref.getString(FACULTY, "")
+        val group = sPref.getString(GROUP, "")
+        if (((faculty != null) && (faculty != "")) && ((group != null) && (group != ""))) {
+            edit_text_group.setText(group)
+            getData(faculty, group)
+        }
+    }
+
+    private fun getData(faculty: String, group: String) {
+
+
+        val retrofitBuilder =
+            Retrofit.Builder().addConverterFactory(GsonConverterFactory.create())
+                .baseUrl(BASE_URL)
+                .build()
+                .create(ApiInterface::class.java)
+
+        val retrofitData = retrofitBuilder.getLessons(faculty, group)
+
+        retrofitData.enqueue(object : Callback<List<Lesson>?> {
+            override fun onResponse(
+                call: Call<List<Lesson>?>,
+                response: Response<List<Lesson>?>
+            ) {
+                println(response.raw())
+
+                if (response.body()?.isEmpty() == true) toast("Choose correct group")
+                else {
+                    val responseBody = response.body()!!
+
+                    setData(currentDay, responseBody)
+
+                    setButtons(responseBody)
+
+                    toggleButtons(true)
+
+                    saveGroup()
+
+                    setData(currentDay, responseBody)
+                }
+            }
+
+            override fun onFailure(call: Call<List<Lesson>?>, t: Throwable) {
+                d("Main", "UPAL" + t.message)
+            }
+        })
+
+    }
 
     private fun getData() {
-        if(faculty_spinner.selectedItem.toString() == "No faculty") {
+        if (faculty_spinner.selectedItem.toString() == "No faculty") {
             toast("Select faculty")
-        }
-
-         else {
+        } else {
             val retrofitBuilder =
                 Retrofit.Builder().addConverterFactory(GsonConverterFactory.create())
                     .baseUrl(BASE_URL)
                     .build()
                     .create(ApiInterface::class.java)
 
-            val retrofitData = retrofitBuilder.getLessons(spinnerItemToFaculty(faculty_spinner.selectedItem.toString()), edit_text_group.text.toString())
+            val retrofitData = retrofitBuilder.getLessons(
+                spinnerItemToFaculty(faculty_spinner.selectedItem.toString()),
+                edit_text_group.text.toString()
+            )
 
             retrofitData.enqueue(object : Callback<List<Lesson>?> {
                 override fun onResponse(
@@ -78,8 +144,7 @@ class MainActivity : AppCompatActivity() {
                 ) {
                     println(response.raw())
 
-                    if(response.body()?.isEmpty() == true) toast("Choose correct group")
-
+                    if (response.body()?.isEmpty() == true) toast("Choose correct group")
                     else {
                         val responseBody = response.body()!!
 
@@ -88,6 +153,8 @@ class MainActivity : AppCompatActivity() {
                         setButtons(responseBody)
 
                         toggleButtons(true)
+
+                        saveGroup()
 
                         setData(currentDay, responseBody)
                     }
@@ -136,9 +203,61 @@ class MainActivity : AppCompatActivity() {
 
         setColorToSelectedButton(currentDay)
 
-        myAdapter = MyAdapter(baseContext, getLessonsByDay(day, lessons))
+        val lessonsList = getLessonsByDay(day, lessons)
+
+        val info: LinearLayout = findViewById(R.id.info)
+
+        info.removeAllViews()
+
+        info.addView(newDayName(day))
+
+        if (lessonsList.isEmpty()) {info.addView(noLessonsInfo())}
+
+        myAdapter = MyAdapter(baseContext, lessonsList)
         myAdapter.notifyDataSetChanged()
         recyclerview_users.adapter = myAdapter
+    }
+
+    private fun newDayName(day: Int): TextView {
+        val textView = TextView(this)
+        textView.text = dayChooser(day)
+        textView.textSize = 25f
+        textView.isSingleLine = false
+        textView.gravity = Gravity.CENTER
+        return textView
+    }
+
+    private fun noLessonsInfo(): TextView {
+        val textView = TextView(this)
+        textView.text = "На сегодня пар нет!"
+        textView.textSize = 20f
+        textView.isSingleLine = false
+        textView.gravity = Gravity.CENTER
+        return textView
+    }
+
+    private fun dayChooser(day: Int): String {
+        when (day) {
+            1 -> {
+                return "ПОНЕДЕЛЬНИК"
+            }
+            2 -> {
+                return "ВТОРНИК"
+            }
+            3 -> {
+                return "СРЕДА"
+            }
+            4 -> {
+                return "ЧЕТВЕРГ"
+            }
+            5 -> {
+                return "ПЯТНИЦА"
+            }
+            6 -> {
+                return "СУББОТА"
+            }
+        }
+        return "Error"
     }
 
     private fun setColorToSelectedButton(day: Int) {
@@ -179,6 +298,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
     private fun toast(text: String) = Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
 
     private fun setColorToUnselectedButton(day: Int) {
