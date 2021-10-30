@@ -49,8 +49,6 @@ class MainActivity : AppCompatActivity() {
 
         button.setOnClickListener {
             toggleButtons(false)
-            recyclerview_users.removeAllViews()
-            recyclerview_users.removeAllViewsInLayout()
 
             hideKeyboard()
 
@@ -81,7 +79,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getData(faculty: String, group: String) {
-
 
         val retrofitBuilder =
             Retrofit.Builder().addConverterFactory(GsonConverterFactory.create())
@@ -115,7 +112,6 @@ class MainActivity : AppCompatActivity() {
                 d("Main", "UPAL" + t.message)
             }
         })
-
     }
 
     private fun getData() {
@@ -144,8 +140,6 @@ class MainActivity : AppCompatActivity() {
                     else {
                         val responseBody = response.body()!!
 
-                        setData(currentDay, responseBody)
-
                         setButtons(responseBody)
 
                         toggleButtons(true)
@@ -155,7 +149,6 @@ class MainActivity : AppCompatActivity() {
                         setData(currentDay, responseBody)
                     }
                 }
-
                 override fun onFailure(call: Call<List<Lesson>?>, t: Throwable) {
                     d("Main", "UPAL" + t.message)
                 }
@@ -207,7 +200,9 @@ class MainActivity : AppCompatActivity() {
 
         info.addView(newDayName(day))
 
-        if (lessonsList.isEmpty()) {info.addView(noLessonsInfo())}
+        if (lessonsList.isEmpty()) {
+            info.addView(noLessonsInfo())
+        }
 
         myAdapter = MyAdapter(baseContext, lessonsList)
         myAdapter.notifyDataSetChanged()
@@ -296,6 +291,7 @@ class MainActivity : AppCompatActivity() {
     private fun toast(text: String) = Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
 
     private fun setColorToUnselectedButton(day: Int) {
+
         val back = Color.BLACK
         val text = Color.WHITE
 
