@@ -33,7 +33,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var myAdapter: MyAdapter
     private lateinit var linearLayoutManager: LinearLayoutManager
 
-    @RequiresApi(Build.VERSION_CODES.N)
     var currentDay: Int = Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -97,13 +96,10 @@ class MainActivity : AppCompatActivity() {
                 call: Call<List<Lesson>?>,
                 response: Response<List<Lesson>?>
             ) {
-                println(response.raw())
 
                 if (response.body()?.isEmpty() == true) toast("Choose correct group")
                 else {
                     val responseBody = response.body()!!
-
-                    setData(currentDay, responseBody)
 
                     setButtons(responseBody)
 
@@ -142,7 +138,7 @@ class MainActivity : AppCompatActivity() {
                     call: Call<List<Lesson>?>,
                     response: Response<List<Lesson>?>
                 ) {
-                    println(response.raw())
+
 
                     if (response.body()?.isEmpty() == true) toast("Choose correct group")
                     else {
@@ -222,7 +218,6 @@ class MainActivity : AppCompatActivity() {
         val textView = TextView(this)
         textView.text = dayChooser(day)
         textView.textSize = 25f
-        textView.isSingleLine = false
         textView.gravity = Gravity.CENTER
         return textView
     }
@@ -231,7 +226,6 @@ class MainActivity : AppCompatActivity() {
         val textView = TextView(this)
         textView.text = "На сегодня пар нет!"
         textView.textSize = 20f
-        textView.isSingleLine = false
         textView.gravity = Gravity.CENTER
         return textView
     }
