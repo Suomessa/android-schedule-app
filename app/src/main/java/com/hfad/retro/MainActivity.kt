@@ -56,8 +56,6 @@ class MainActivity : AppCompatActivity() {
 
             getData()
         }
-
-
     }
 
     fun saveGroup() {
@@ -93,7 +91,6 @@ class MainActivity : AppCompatActivity() {
                 call: Call<List<Lesson>?>,
                 response: Response<List<Lesson>?>
             ) {
-
                 if (response.body()?.isEmpty() == true) toast("Choose correct group")
                 else {
                     val responseBody = response.body()!!
@@ -213,7 +210,7 @@ class MainActivity : AppCompatActivity() {
         val textView = TextView(this)
         textView.text = dayChooser(day)
         textView.textSize = 25f
-        textView.gravity = Gravity.CENTER
+        textView.gravity = Gravity.CENTER_HORIZONTAL
         return textView
     }
 
@@ -221,7 +218,7 @@ class MainActivity : AppCompatActivity() {
         val textView = TextView(this)
         textView.text = "На сегодня пар нет!"
         textView.textSize = 20f
-        textView.gravity = Gravity.CENTER
+        textView.gravity = Gravity.CENTER_HORIZONTAL
         return textView
     }
 
@@ -244,6 +241,9 @@ class MainActivity : AppCompatActivity() {
             }
             6 -> {
                 return "СУББОТА"
+            }
+            7 -> {
+                return "Воскресенье"
             }
         }
         return "Error"
