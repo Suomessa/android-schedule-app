@@ -1,5 +1,7 @@
 package com.hfad.retro
 
+import com.hfad.retro.model.Faculty
+import com.hfad.retro.model.Lesson
 import java.lang.StringBuilder
 
 fun getLessonsByDay(day: Int, allLessons: List<Lesson>): List<Lesson> {
@@ -22,6 +24,11 @@ fun spinnerItemToFaculty(faculty: String)=
          "Социо"-> "sf"
         else -> "No faculty"
     }
+
+fun spinnerFacultyToPath(faculty: String, faculties: List<Faculty>): String {
+    faculties.forEach { e -> if(e.name == faculty) return e.code }
+    return "error";
+}
 
 fun getLessonTime(lesson: Int) = when (lesson) {
     1 ->  "08:20 - 09:50"
@@ -46,4 +53,35 @@ fun formatOthers(parity: String, other: String, type: String): String {
     else if (type != "") resultString.append(type)
 
     return resultString.toString()
+}
+
+fun dayChooser(day: Int): String {
+    when (day) {
+        1 -> {
+            return "ПОНЕДЕЛЬНИК"
+        }
+        2 -> {
+            return "ВТОРНИК"
+        }
+        3 -> {
+            return "СРЕДА"
+        }
+        4 -> {
+            return "ЧЕТВЕРГ"
+        }
+        5 -> {
+            return "ПЯТНИЦА"
+        }
+        6 -> {
+            return "СУББОТА"
+        }
+        7 -> {
+            return "Воскресенье"
+        }
+    }
+    return "Error"
+}
+
+fun setDayOfWeek(day: Int): Int {
+    return if (day == 7) 1 else day
 }

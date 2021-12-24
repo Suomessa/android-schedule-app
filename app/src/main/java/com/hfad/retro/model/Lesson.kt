@@ -1,4 +1,4 @@
-package com.hfad.retro
+package com.hfad.retro.model
 
 data class Lesson(
     val day: Int,

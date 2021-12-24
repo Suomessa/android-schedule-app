@@ -3,18 +3,17 @@ package com.hfad.retro
 import android.content.SharedPreferences
 import android.graphics.Color
 import android.icu.util.Calendar
-import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log.d
 import android.view.Gravity
-import android.widget.Button
-import android.widget.LinearLayout
-import android.widget.TextView
-import android.widget.Toast
-import androidx.annotation.RequiresApi
+import android.view.View
+import android.widget.*
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.hfad.retro.model.Faculty
+import com.hfad.retro.model.Group
+import com.hfad.retro.model.Lesson
 import kotlinx.android.synthetic.main.activity_main.*
 import retrofit2.Call
 import retrofit2.Callback
@@ -23,7 +22,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 
-const val BASE_URL = "https://schedule-to-ssu.herokuapp.com/"
+const val BASE_URL = "http://192.168.1.47:8082/"
 
 const val GROUP = "groupNumber"
 const val FACULTY = "faculty"
@@ -32,20 +31,29 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var myAdapter: MyAdapter
     private lateinit var linearLayoutManager: LinearLayoutManager
+    private lateinit var retrofitClient: ApiInterface
 
-    var currentDay: Int = Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 1
+    var currentDay: Int = setDayOfWeek(Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 1)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.getDefaultNightMode())
         setContentView(R.layout.activity_main)
+        retrofitClient = Retrofit.Builder().addConverterFactory(GsonConverterFactory.create())
+            .baseUrl(BASE_URL)
+            .build()
+            .create(ApiInterface::class.java)
 
         recyclerview_users.setHasFixedSize(true)
         linearLayoutManager = LinearLayoutManager(this)
         recyclerview_users.layoutManager = linearLayoutManager
         toggleButtons(false)
 
-        loadGroup()
+        //loadGroup()
+
+        getFaculties()
+
+
 
         button.setOnClickListener {
             toggleButtons(false)
@@ -58,11 +66,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun saveGroup() {
+    fun saveGroup(faculties: List<Faculty>) {
         val sPref = getPreferences(MODE_PRIVATE)
         val ed: SharedPreferences.Editor = sPref.edit()
-        ed.putString(GROUP, edit_text_group.text.toString())
-        ed.putString(FACULTY, spinnerItemToFaculty(faculty_spinner.selectedItem.toString()))
+        ed.putString(GROUP, edit_text_group.selectedItem.toString())
+        ed.putString(FACULTY, spinnerFacultyToPath(faculty_spinner.selectedItem.toString(), faculties))
         ed.apply()
     }
 
@@ -71,83 +79,174 @@ class MainActivity : AppCompatActivity() {
         val faculty = sPref.getString(FACULTY, "")
         val group = sPref.getString(GROUP, "")
         if (((faculty != null) && (faculty != "")) && ((group != null) && (group != ""))) {
-            edit_text_group.setText(group)
             getData(faculty, group)
         }
     }
 
-    private fun getData(faculty: String, group: String) {
+    private fun getFaculties() {
+        val retrofitData = retrofitClient.allFaculties()
 
-        val retrofitBuilder =
-            Retrofit.Builder().addConverterFactory(GsonConverterFactory.create())
-                .baseUrl(BASE_URL)
-                .build()
-                .create(ApiInterface::class.java)
-
-        val retrofitData = retrofitBuilder.getLessons(faculty, group)
-
-        retrofitData.enqueue(object : Callback<List<Lesson>?> {
+        retrofitData.enqueue(object : Callback<List<Faculty>?> {
             override fun onResponse(
-                call: Call<List<Lesson>?>,
-                response: Response<List<Lesson>?>
+                call: Call<List<Faculty>?>,
+                response: Response<List<Faculty>?>
             ) {
-                if (response.body()?.isEmpty() == true) toast("Choose correct group")
-                else {
-                    val responseBody = response.body()!!
+                val responseBody = response.body()!!
 
-                    setButtons(responseBody)
+                var facultyString = mutableListOf<String>();
 
-                    toggleButtons(true)
+                responseBody.forEach { e -> facultyString.add(e.name) }
 
-                    saveGroup()
+                var adapter: ArrayAdapter<String> = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_item, facultyString)
 
-                    setData(currentDay, responseBody)
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+
+                var spinner: Spinner = findViewById(R.id.faculty_spinner)
+                spinner.adapter = adapter
+
+                spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
+                    override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
+                        getGroups(spinner.selectedItem.toString(), responseBody)
+                    }
+
+                    override fun onNothingSelected(p0: AdapterView<*>?) {
+                        TODO("Not yet implemented")
+                    }
+
                 }
+
             }
 
-            override fun onFailure(call: Call<List<Lesson>?>, t: Throwable) {
+            override fun onFailure(call: Call<List<Faculty>?>, t: Throwable) {
                 d("Main", "UPAL" + t.message)
             }
         })
+
+    }
+
+
+    private fun getGroups(faculty: String, faculties: List<Faculty>) {
+        val retrofitData = retrofitClient.allGroupsOnFaculty(spinnerFacultyToPath(faculty, faculties))
+
+        retrofitData.enqueue(object : Callback<List<Group>?> {
+            override fun onResponse(call: Call<List<Group>?>, response: Response<List<Group>?>) {
+                val responseBody = response.body()!!
+
+                var groupString = mutableListOf<String>();
+
+                responseBody.forEach { e -> groupString.add(e.groupName) }
+
+                var adapter: ArrayAdapter<String> = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_item, groupString)
+
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+
+                var spinner: Spinner = findViewById(R.id.edit_text_group)
+                spinner.adapter = adapter
+            }
+
+            override fun onFailure(call: Call<List<Group>?>, t: Throwable) {
+                d("Main", "UPAL" + t.message)
+            }
+        })
+    }
+
+    private fun getData(faculty: String, group: String) {
+
+        val retrofitData = retrofitClient.getLessons(faculty, group)
+
+        val faculties = retrofitClient.allFaculties()
+
+        faculties.enqueue(object : Callback<List<Faculty>?> {
+            override fun onResponse(
+                call: Call<List<Faculty>?>,
+                response: Response<List<Faculty>?>
+            ) {
+
+                val faculties = response.body()!!
+
+
+                retrofitData.enqueue(object : Callback<List<Lesson>?> {
+                    override fun onResponse(
+                        call: Call<List<Lesson>?>,
+                        response: Response<List<Lesson>?>
+                    ) {
+                        if (response.body()?.isEmpty() == true) toast("Schedule is empty")
+                        else {
+                            val responseBody = response.body()!!
+
+                            setButtons(responseBody)
+
+                            toggleButtons(true)
+
+                            saveGroup(faculties)
+
+                            setData(currentDay, responseBody)
+                        }
+                    }
+
+                    override fun onFailure(call: Call<List<Lesson>?>, t: Throwable) {
+                        d("Main", "UPAL" + t.message)
+                    }
+                })
+            }
+
+            override fun onFailure(call: Call<List<Faculty>?>, t: Throwable) {
+                d("Main", "UPAL" + t.message)
+            }
+        })
+
+
     }
 
     private fun getData() {
         if (faculty_spinner.selectedItem.toString() == "No faculty") {
             toast("Select faculty")
         } else {
-            val retrofitBuilder =
-                Retrofit.Builder().addConverterFactory(GsonConverterFactory.create())
-                    .baseUrl(BASE_URL)
-                    .build()
-                    .create(ApiInterface::class.java)
 
-            val retrofitData = retrofitBuilder.getLessons(
-                spinnerItemToFaculty(faculty_spinner.selectedItem.toString()),
-                edit_text_group.text.toString()
-            )
+            val faculties = retrofitClient.allFaculties()
 
-            retrofitData.enqueue(object : Callback<List<Lesson>?> {
+            faculties.enqueue(object : Callback<List<Faculty>> {
                 override fun onResponse(
-                    call: Call<List<Lesson>?>,
-                    response: Response<List<Lesson>?>
+                    call: Call<List<Faculty>>,
+                    response: Response<List<Faculty>>
                 ) {
 
+                    val facultyList = response.body()!!
 
-                    if (response.body()?.isEmpty() == true) toast("Choose correct group")
-                    else {
-                        val responseBody = response.body()!!
+                    val retrofitData = retrofitClient.getLessons(
+                        spinnerFacultyToPath(faculty_spinner.selectedItem.toString(), facultyList),
+                        edit_text_group.selectedItem.toString()
+                    )
 
-                        setButtons(responseBody)
+                    retrofitData.enqueue(object : Callback<List<Lesson>?> {
+                        override fun onResponse(
+                            call: Call<List<Lesson>?>,
+                            response: Response<List<Lesson>?>
+                        ) {
 
-                        toggleButtons(true)
 
-                        saveGroup()
+                            if (response.body()?.isEmpty() == true) toast("Schedule is empty")
+                            else {
+                                val responseBody = response.body()!!
 
-                        setData(currentDay, responseBody)
-                    }
+                                setButtons(responseBody)
+
+                                toggleButtons(true)
+
+                                saveGroup(facultyList)
+
+                                setData(currentDay, responseBody)
+                            }
+                        }
+
+                        override fun onFailure(call: Call<List<Lesson>?>, t: Throwable) {
+                            d("Main", "UPAL" + t.message)
+                        }
+                    })
                 }
-                override fun onFailure(call: Call<List<Lesson>?>, t: Throwable) {
-                    d("Main", "UPAL" + t.message)
+
+                override fun onFailure(call: Call<List<Faculty>>, t: Throwable) {
+                    TODO("Not yet implemented")
                 }
             })
         }
@@ -220,33 +319,6 @@ class MainActivity : AppCompatActivity() {
         textView.textSize = 20f
         textView.gravity = Gravity.CENTER_HORIZONTAL
         return textView
-    }
-
-    private fun dayChooser(day: Int): String {
-        when (day) {
-            1 -> {
-                return "ПОНЕДЕЛЬНИК"
-            }
-            2 -> {
-                return "ВТОРНИК"
-            }
-            3 -> {
-                return "СРЕДА"
-            }
-            4 -> {
-                return "ЧЕТВЕРГ"
-            }
-            5 -> {
-                return "ПЯТНИЦА"
-            }
-            6 -> {
-                return "СУББОТА"
-            }
-            7 -> {
-                return "Воскресенье"
-            }
-        }
-        return "Error"
     }
 
     private fun setColorToSelectedButton(day: Int) {

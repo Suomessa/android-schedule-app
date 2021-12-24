@@ -7,43 +7,63 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <RelativeLayout
+    <LinearLayout
         android:id="@+id/topViews"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="7sp"
-        android:layout_gravity="center">
+        android:layout_gravity="center"
+        android:orientation="vertical">
 
         <Spinner
             android:id="@+id/faculty_spinner"
-            android:layout_width="125dp"
-            android:layout_height="38sp"
-            android:layout_marginTop="20sp"
-            android:entries="@array/facultys"/>
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="20sp" />
 
-        <EditText
-            android:id="@+id/edit_text_group"
-            android:layout_width="60sp"
-            android:layout_height="40sp"
-            android:layout_marginTop="20sp"
-            android:layout_marginLeft="10sp"
-            android:layout_toRightOf="@id/faculty_spinner"
-            android:singleLine="true">
-        </EditText>
 
-        <Button
-            android:id="@+id/button"
-            android:layout_width="wrap_content"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="10sp"
-            android:layout_marginTop="15sp"
-            android:layout_toRightOf="@id/edit_text_group"
-            android:text="@string/getButton"
-            app:backgroundTint="@color/black"
-            android:textColor="@color/white"/>
+            android:orientation="horizontal">
 
-    </RelativeLayout>
+            <Spinner
+                android:id="@+id/edit_text_group"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_marginStart="15dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginEnd="44dp"
+                android:layout_marginBottom="5dp"
+                android:singleLine="true"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/button"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"></Spinner>
+
+            <Button
+                android:id="@+id/button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
+                android:layout_toRightOf="@id/edit_text_group"
+                android:gravity="right"
+                android:text="@string/getButton"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/black"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="1.0"
+                app:layout_constraintStart_toEndOf="@+id/edit_text_group"
+                app:layout_constraintTop_toTopOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
+
+
+    </LinearLayout>
 
     <RelativeLayout
         android:layout_width="wrap_content"
